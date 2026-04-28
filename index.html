@@ -232,6 +232,18 @@
       }
     }
     
+    function showAddClassModal() { document.getElementById('classNameInput').value=''; showModal('addClassModal'); }
+    function showAddStudentModal() { if (!currentClass) { alert('请先创建或选择一个班级'); return; } showModal('studentModal'); }
+      document.getElementById(id).classList.remove('show');
+      if (id==='studentModal') {
+        document.getElementById('studentNameInput').value='';
+        selectedAvatar=DEFAULT_AVATARS[0];
+        editingStudentKey=null;
+        renderAvatarSelect();
+        document.getElementById('studentModalTitle').textContent='➕ 添加学生';
+      }
+    }
+    
     function saveClass() {
       const name = document.getElementById('classNameInput').value.trim();
       if (!name) return;
