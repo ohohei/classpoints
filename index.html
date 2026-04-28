@@ -1,290 +1,145 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎓 班级积分助手</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    :root { --primary: #6C5CE7; --secondary: #00CEC9; --accent: #FDCB6E; --bg: #F8F9FF; --text: #2D3436; --card-bg: #FFFFFF; --shadow: 0 4px 20px rgba(108,92,231,0.15); }
-    body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
-    .sidebar { width: 260px; background: var(--card-bg); box-shadow: var(--shadow); padding: 20px; display: flex; flex-direction: column; }
-    .sidebar h2 { color: var(--primary); font-size: 1.3rem; margin-bottom: 20px; }
-    .class-list { flex: 1; overflow-y: auto; }
-    .class-item { padding: 12px 16px; margin-bottom: 8px; border-radius: 12px; cursor: pointer; display: flex; justify-content: space-between; }
-    .class-item:hover { background: rgba(108,92,231,0.1); }
-    .class-item.active { background: var(--primary); color: white; }
-    .class-item .delete-btn { opacity: 0; background: none; border: none; cursor: pointer; }
-    .class-item:hover .delete-btn { opacity: 0.7; }
-    .add-class-btn { background: var(--secondary); color: white; border: none; padding: 12px; border-radius: 12px; cursor: pointer; margin-top: 12px; }
-    .main { flex: 1; padding: 30px; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-    .header h1 { font-size: 1.8rem; color: var(--primary); }
-    .header .student-count { background: var(--accent); padding: 6px 16px; border-radius: 20px; font-weight: 600; }
-    .add-student-btn { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; }
-    .student-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 20px; }
-    .student-card { background: var(--card-bg); border-radius: 20px; padding: 24px; text-align: center; box-shadow: var(--shadow); cursor: pointer; position: relative; }
-    .student-card:hover { transform: translateY(-4px); }
-    .student-card .avatar { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 12px; background: linear-gradient(135deg,var(--primary),var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; }
-    .student-card .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-    .student-card .name { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
-    .student-card .points { font-size: 2.5rem; font-weight: 800; color: var(--primary); margin-bottom: 16px; }
-    .student-card .points.up { animation: pointsUp 0.5s; }
-    @keyframes pointsUp { 50% { transform: scale(1.3); color: var(--accent); } }
-    .student-card .actions { display: flex; justify-content: center; gap: 12px; }
-    .student-card .actions button { width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer; font-size: 1.4rem; }
-    .btn-minus { background: #FFE5E5; color: #E74C3C; }
-    .btn-plus { background: #E5F9E5; color: #27AE60; }
-    .student-card .edit-btn, .student-card .del-btn { position: absolute; background: none; border: none; cursor: pointer; font-size: 1rem; opacity: 0; }
-    .student-card:hover .edit-btn, .student-card:hover .del-btn { opacity: 0.5; }
-    .edit-btn { top: 12px; right: 12px; }
-    .del-btn { top: 12px; left: 12px; }
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; }
-    .modal-overlay.show { opacity: 1; visibility: visible; }
-    .modal { background: var(--card-bg); border-radius: 20px; padding: 30px; width: 90%; max-width: 400px; }
-    .modal h3 { color: var(--primary); margin-bottom: 20px; }
-    .modal input { width: 100%; padding: 14px 16px; border: 2px solid #E0E0E0; border-radius: 12px; font-size: 1rem; margin-bottom: 16px; }
-    .modal input:focus { outline: none; border-color: var(--primary); }
-    .modal .avatar-select { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
-    .modal .avatar-option { width: 50px; height: 50px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; }
-    .modal .avatar-option.selected { border-color: var(--primary); background: rgba(108,92,231,0.1); }
-    .modal .buttons { display: flex; gap: 12px; }
-    .modal .buttons button { flex: 1; padding: 14px; border-radius: 12px; border: none; cursor: pointer; font-size: 1rem; }
-    .modal .buttons .save { background: var(--primary); color: white; }
-    .modal .buttons .cancel { background: #E0E0E0; }
-    .celebration { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 2000; }
-    .celebration .mascot { position: absolute; font-size: 4rem; animation: bounce 0.6s ease infinite; }
-    @keyframes bounce { 0%,100% { transform: translateY(0) rotate(-10deg); } 50% { transform: translateY(-30px) rotate(10deg); } }
-    .celebration .coin { position: absolute; font-size: 2rem; animation: fall 1s ease-out forwards; }
-    @keyframes fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
-    .celebration .points-popup { position: absolute; font-size: 3rem; font-weight: 800; color: var(--accent); text-shadow: 2px 2px 4px rgba(0,0,0,0.3); animation: popUp 1s ease-out forwards; }
-    @keyframes popUp { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.3); } 100% { transform: scale(1) translateY(-50px); opacity: 0; } }
-    .empty-state { text-align: center; padding: 60px; color: #999; }
-    .empty-state .icon { font-size: 4rem; margin-bottom: 16px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎓 班级积分助手</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', sans-serif; background: #F8F9FF; min-height: 100vh; }
+.container { display: flex; }
+.sidebar { width: 220px; background: #fff; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+.sidebar h2 { color: #6C5CE7; margin-bottom: 20px; }
+.class-item { padding: 10px; margin: 5px 0; border-radius: 8px; cursor: pointer; }
+.class-item:hover { background: #f0f0f0; }
+.class-item.active { background: #6C5CE7; color: white; }
+.add-btn { background: #00CEC9; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+.main { flex: 1; padding: 30px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+.header h1 { color: #6C5CE7; }
+.student-count { background: #FDCB6E; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 20px; }
+.card { background: #fff; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; }
+.card:hover { transform: translateY(-3px); }
+.card .avatar { font-size: 2.5rem; margin-bottom: 10px; }
+.card .name { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
+.card .points { font-size: 2rem; color: #6C5CE7; font-weight: bold; margin-bottom: 10px; }
+.card .points.up { animation: pulse 0.3s; }
+@keyframes pulse { 50% { transform: scale(1.2); } }
+.card .btns { display: flex; justify-content: center; gap: 10px; }
+.card .btns button { width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer; font-size: 1.2rem; }
+.btn-plus { background: #E5F9E5; color: #27AE60; }
+.btn-minus { background: #FFE5E5; color: #E74C3C; }
+.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; }
+.modal.show { display: flex; }
+.modal-content { background: #fff; padding: 30px; border-radius: 16px; width: 90%; max-width: 350px; }
+.modal-content h3 { color: #6C5CE7; margin-bottom: 15px; }
+.modal-content input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 15px; font-size: 1rem; }
+.modal-content input:focus { outline: none; border-color: #6C5CE7; }
+.modal-content .btns { display: flex; gap: 10px; }
+.modal-content .btns button { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; }
+.modal-content .btns .save { background: #6C5CE7; color: white; }
+.modal-content .btns .cancel { background: #ddd; }
+.empty { text-align: center; color: #999; padding: 50px; }
+.empty .icon { font-size: 3rem; margin-bottom: 10px; }
+</style>
 </head>
 <body>
-  <div class="sidebar">
-    <h2>🏫 我的班级</h2>
-    <div class="class-list" id="classList"></div>
-    <button class="add-class-btn" onclick="showAddClassModal()">+ 新建班级</button>
-  </div>
-  <div class="main">
-    <div class="header">
-      <div>
-        <h1 id="currentClassName">请选择班级</h1>
-        <span class="student-count" id="studentCount"></span>
-      </div>
-      <button class="add-student-btn" onclick="showAddStudentModal()">+ 添加学生</button>
-    </div>
-    <div class="student-grid" id="studentGrid"></div>
-  </div>
-  <div class="modal-overlay" id="addClassModal">
-    <div class="modal">
-      <h3>➕ 新建班级</h3>
-      <input type="text" id="classNameInput" placeholder="请输入班级名称">
-      <div class="buttons">
-        <button class="cancel" onclick="hideModal('addClassModal')">取消</button>
-        <button class="save" onclick="saveClass()">保存</button>
-      </div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="studentModal">
-    <div class="modal">
-      <h3 id="studentModalTitle">➕ 添加学生</h3>
-      <input type="text" id="studentNameInput" placeholder="请输入学生姓名">
-      <p style="margin-bottom:8px;color:#666;font-size:0.9rem;">选择头像：</p>
-      <div class="avatar-select" id="avatarSelect"></div>
-      <div class="buttons">
-        <button class="cancel" onclick="hideModal('studentModal')">取消</button>
-        <button class="save" onclick="saveStudent()">保存</button>
-      </div>
-    </div>
-  </div>
-  <div class="celebration" id="celebration"></div>
-  <script>
-    const DEFAULT_AVATARS = ['🧑‍🎓','🧑‍💻','👦','👧','🧒','👨‍🎤','👩‍🎓','🧑‍🎨'];
-    let data = {classes:{}};
-    let currentClass = null;
-    let editingStudentKey = null;
-    let selectedAvatar = DEFAULT_AVATARS[0];
-    let studentsMap = {};
-    
-    function init() {
-      renderAvatarSelect();
-      loadData();
-    }
-    
-    function loadData() {
-      const saved = localStorage.getItem('classpoints_data');
-      if (saved) {
-        try { data = JSON.parse(saved); } catch(e) { data = {classes:{}}; }
-      }
-      loadClasses();
-    }
-    
-    function saveData() {
-      localStorage.setItem('classpoints_data', JSON.stringify(data));
-    }
-    
-    function renderAvatarSelect() {
-      document.getElementById('avatarSelect').innerHTML = DEFAULT_AVATARS.map(a => 
-        `<div class="avatar-option ${a===selectedAvatar?'selected':''}" onclick="selectAvatar('${a}')">${a}</div>`
-      ).join('');
-    }
-    
-    function selectAvatar(a) { selectedAvatar = a; renderAvatarSelect(); }
-    
-    function loadClasses() {
-      const c = document.getElementById('classList');
-      const keys = Object.keys(data.classes||{});
-      if (!keys.length) {
-        c.innerHTML = '<div class="empty-state"><p>暂无班级</p></div>';
-        document.getElementById('currentClassName').textContent = '请创建班级';
-        document.getElementById('studentGrid').innerHTML = '<div class="empty-state"><div class="icon">📚</div><p>点击"新建班级"开始</p></div>';
-        return;
-      }
-      c.innerHTML = keys.map(k => 
-        `<div class="class-item ${currentClass===k?'active':''}" onclick="selectClass('${k}')">${data.classes[k].name}<button class="delete-btn" onclick="event.stopPropagation();deleteClass('${k}')">🗑️</button></div>`
-      ).join('');
-      if (!currentClass) selectClass(keys[0]);
-    }
-    
-    function selectClass(id) {
-      currentClass = id;
-      document.getElementById('currentClassName').textContent = data.classes[id].name || '';
-      loadClasses();
-      loadStudents();
-    }
-    
-    function loadStudents() {
-      const s = document.getElementById('studentGrid');
-      const students = data.classes[currentClass]?.students || {};
-      studentsMap = students;
-      const keys = Object.keys(students);
-      if (!keys.length) {
-        s.innerHTML = '<div class="empty-state"><div class="icon">📚</div><p>点击"添加学生"</p></div>';
-        document.getElementById('studentCount').textContent = '0人';
-        return;
-      }
-      s.innerHTML = keys.map(k => {
-        const st = students[k];
-        return `<div class="student-card" onclick="increasePoints('${k}')">
-          <button class="del-btn" onclick="event.stopPropagation();deleteStudent('${k}')">🗑️</button>
-          <button class="edit-btn" onclick="event.stopPropagation();editStudent('${k}')">✏️</button>
-          <div class="avatar">${st.avatar}</div>
-          <div class="name">${st.name}</div>
-          <div class="points" id="points-${k}">${st.points||0}</div>
-          <div class="actions">
-            <button class="btn-minus" onclick="event.stopPropagation();decreasePoints('${k}')">➖</button>
-            <button class="btn-plus" onclick="event.stopPropagation();increasePoints('${k}')">➕</button>
-          </div>
-        </div>`;
-      }).join('');
-      document.getElementById('studentCount').textContent = keys.length + '人';
-    }
-    
-    function increasePoints(k) {
-      data.classes[currentClass].students[k].points = (data.classes[currentClass].students[k].points||0) + 1;
-      saveData();
-      document.getElementById('points-'+k).textContent = data.classes[currentClass].students[k].points;
-      showCelebration();
-    }
-    
-    function decreasePoints(k) {
-      if (data.classes[currentClass].students[k].points > 0) {
-        data.classes[currentClass].students[k].points--;
-        saveData();
-        document.getElementById('points-'+k).textContent = data.classes[currentClass].students[k].points;
-      }
-    }
-    
-    function showCelebration() {
-      const con = document.getElementById('celebration');
-      const mascots = ['🎉','🥳','🦄','🌟'];
-      const coins = ['🪙','💰','✨'];
-      const m = document.createElement('div');
-      m.className = 'mascot';
-      m.textContent = mascots[Math.floor(Math.random()*mascots.length)];
-      m.style.left = (Math.random()*60+20)+'%';
-      m.style.top = '30%';
-      con.appendChild(m);
-      for (let i=0;i<8;i++) {
-        const c = document.createElement('div');
-        c.className = 'coin';
-        c.textContent = coins[Math.floor(Math.random()*coins.length)];
-        c.style.left = (Math.random()*80+10)+'%';
-        c.style.animationDelay = (i*0.1)+'s';
-        con.appendChild(c);
-      }
-      setTimeout(()=>con.innerHTML='',1500);
-    }
-    
-    function showModal(id) { document.getElementById(id).classList.add('show'); }
-    function hideModal(id) {
-      document.getElementById(id).classList.remove('show');
-      if (id==='studentModal') {
-        document.getElementById('studentNameInput').value='';
-        selectedAvatar=DEFAULT_AVATARS[0];
-        editingStudentKey=null;
-        renderAvatarSelect();
-        document.getElementById('studentModalTitle').textContent='➕ 添加学生';
-      }
-    }
-    
-    function saveClass() {
-      const name = document.getElementById('classNameInput').value.trim();
-      if (!name) return;
-      const id = 'c'+Date.now();
-      data.classes[id] = {name,students:{}};
-      saveData();
-      loadClasses();
-      selectClass(id);
-      hideModal('addClassModal');
-    }
-    
-    function deleteClass(id) {
-      if (!confirm('删除?')) return;
-      delete data.classes[id];
-      if (currentClass===id) currentClass=null;
-      saveData();
-      loadClasses();
-    }
-    
-    function saveStudent() {
-      const name = document.getElementById('studentNameInput').value.trim();
-      if (!name) return;
-      if (!data.classes[currentClass].students) data.classes[currentClass].students = {};
-      if (editingStudentKey) {
-        data.classes[currentClass].students[editingStudentKey].name = name;
-        data.classes[currentClass].students[editingStudentKey].avatar = selectedAvatar;
-      } else {
-        const id = 's'+Date.now();
-        data.classes[currentClass].students[id] = {name,avatar:selectedAvatar,points:0};
-      }
-      saveData();
-      loadStudents();
-      hideModal('studentModal');
-    }
-    
-    function editStudent(k) {
-      const s = data.classes[currentClass].students[k];
-      editingStudentKey = k;
-      document.getElementById('studentNameInput').value = s.name;
-      selectedAvatar = s.avatar;
-      document.getElementById('studentModalTitle').textContent = '✏️ 编辑';
-      showModal('studentModal');
-      renderAvatarSelect();
-    }
-    
-    function deleteStudent(k) {
-      if (!confirm('删除?')) return;
-      delete data.classes[currentClass].students[k];
-      saveData();
-      loadStudents();
-    }
-    
-    window.addEventListener('DOMContentLoaded',init);
-  </script>
+<div class="container">
+<div class="sidebar">
+<h2>🏫 班级</h2>
+<div id="classList"></div>
+<button class="add-btn" onclick="showAddClass()">+ 新建班级</button>
+</div>
+<div class="main">
+<div class="header">
+<div>
+<h1 id="className">请选择班级</h1>
+<span class="student-count" id="studentCount"></span>
+</div>
+<button class="add-btn" onclick="showAddStudent()">+ 添加学生</button>
+</div>
+<div class="grid" id="studentGrid"></div>
+</div>
+</div>
+<div class="modal" id="classModal">
+<div class="modal-content">
+<h3>新建班级</h3>
+<input type="text" id="classInput" placeholder="班级名称">
+<div class="btns">
+<button class="cancel" onclick="closeModal('classModal')">取消</button>
+<button class="save" onclick="saveClass()">保存</button>
+</div>
+</div>
+</div>
+<div class="modal" id="studentModal">
+<div class="modal-content">
+<h3>添加学生</h3>
+<input type="text" id="studentInput" placeholder="学生姓名">
+<div class="btns">
+<button class="cancel" onclick="closeModal('studentModal')">取消</button>
+<button class="save" onclick="saveStudent()">保存</button>
+</div>
+</div>
+</div>
+<script>
+const AVATARS = ['🧑‍🎓','🧑‍💻','👦','👧','🧒','👨‍🎤','👩‍🎓','🧑‍🎨'];
+let data = {classes:{}};
+let currentClass = null;
+let editKey = null;
+
+function load() {
+  const s = localStorage.getItem('cp_data');
+  if (s) try{data = JSON.parse(s)}catch{e}
+  showClasses();
+}
+function save() { localStorage.setItem('cp_data', JSON.stringify(data)); }
+
+function showClasses() {
+  const c = document.getElementById('classList');
+  const k = Object.keys(data.classes);
+  if (!k.length) { c.innerHTML = '<div class="empty">暂无班级</div>'; return; }
+  c.innerHTML = k.map(x => `<div class="class-item ${currentClass===x?'active':''}" onclick="sel('${x}')">${data.classes[x].name}</div>`).join('');
+  if (!currentClass) sel(k[0]);
+}
+function sel(id) { currentClass = id; document.getElementById('className').textContent = data.classes[id].name; showClasses(); showStudents(); }
+function showStudents() {
+  const s = document.getElementById('studentGrid');
+  const st = data.classes[currentClass]?.students || {};
+  const k = Object.keys(st);
+  if (!k.length) { s.innerHTML = '<div class="empty"><div class="icon">📚</div><p>点击添加学生</p></div>'; document.getElementById('studentCount').textContent = '0人'; return; }
+  s.innerHTML = k.map(x => `<div class="card" onclick="inc('${x}')"><div class="avatar">${st[x].avatar}</div><div class="name">${st[x].name}</div><div class="points" id="p${x}">${st[x].points||0}</div><div class="btns"><button class="btn-minus" onclick="e=>dec('${x}',e)">➖</button><button class="btn-plus" onclick="e=>inc('${x}',e)">➕</button></div></div>`).join('');
+  document.getElementById('studentCount').textContent = k.length + '人';
+}
+
+function inc(k,e) { e.stopPropagation(); data.classes[currentClass].students[k].points = (data.classes[currentClass].students[k].points||0)+1; save(); document.getElementById('p'+k).textContent = data.classes[currentClass].students[k].points; document.getElementById('p'+k).classList.add('up'); setTimeout(()=>document.getElementById('p'+k).classList.remove('up'),300); }
+function dec(k,e) { e.stopPropagation(); if(data.classes[currentClass].students[k].points>0){data.classes[currentClass].students[k].points--;save();document.getElementById('p'+k).textContent=data.classes[currentClass].students[k].points;} }
+
+function showAddClass() { document.getElementById('classInput').value=''; document.getElementById('classModal').classList.add('show'); }
+function showAddStudent() { if(!currentClass)return alert('先创建班级'); document.getElementById('studentInput').value=''; document.getElementById('studentModal').classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function saveClass() {
+  const n = document.getElementById('classInput').value.trim();
+  if (!n) return;
+  const id = 'c'+Date.now();
+  data.classes[id] = {name:n,students:{}};
+  save();
+  closeModal('classModal');
+  showClasses();
+  sel(id);
+}
+function saveStudent() {
+  const n = document.getElementById('studentInput').value.trim();
+  if (!n) return;
+  if (!data.classes[currentClass].students) data.classes[currentClass].students = {};
+  const id = 's'+Date.now();
+  data.classes[currentClass].students[id] = {name:n,avatar:AVATARS[Math.floor(Math.random()*AVATARS.length)],points:0};
+  save();
+  closeModal('studentModal');
+  showStudents();
+}
+load();
+</script>
 </body>
 </html>
