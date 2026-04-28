@@ -9,6 +9,7 @@ body{font-family:'Microsoft YaHei',sans-serif;background:#f5f5f5;padding:20px}
 h1{color:#6C5CE7}
 .btn{background:#00CEC9;color:#fff;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-size:16px;margin:5px}
 .btn:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,206,201,0.4)}
+.btn-outline{background:transparent;color:#6C5CE7;border:2px solid #6C5CE7}
 .class-item{background:#fff;padding:12px;margin:5px 0;border-radius:8px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.1)}
 .class-item:hover{transform:translateY(-2px)}
 .class-item.active{background:#6C5CE7;color:#fff}
@@ -28,10 +29,13 @@ h1{color:#6C5CE7}
 .modal-con input:focus{outline:none;border-color:#6C5CE7}
 input{font-size:15px;padding:10px;border:2px solid #ddd;border-radius:6px}
 input:focus{outline:none;border-color:#6C5CE7}
+.status{background:#fff;padding:10px;border-radius:8px;margin-bottom:15px;font-size:14px;color:#666}
+.status.online{background:#e8f5e9;color:#2e7d32}
 </style>
 </head>
 <body>
 <h1>🏫 班级积分</h1>
+<div id="status" class="status">本地模式</div>
 <div style="margin-bottom:20px">
 <input id="cid" placeholder="班级名"><button class="btn" onclick="addClass()">+新建班级</button>
 </div>
