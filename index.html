@@ -1,145 +1,69 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎓 班级积分助手</title>
+<title>班级积分</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Segoe UI', sans-serif; background: #F8F9FF; min-height: 100vh; }
-.container { display: flex; }
-.sidebar { width: 220px; background: #fff; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
-.sidebar h2 { color: #6C5CE7; margin-bottom: 20px; }
-.class-item { padding: 10px; margin: 5px 0; border-radius: 8px; cursor: pointer; }
-.class-item:hover { background: #f0f0f0; }
-.class-item.active { background: #6C5CE7; color: white; }
-.add-btn { background: #00CEC9; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; margin-top: 10px; }
-.main { flex: 1; padding: 30px; }
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-.header h1 { color: #6C5CE7; }
-.student-count { background: #FDCB6E; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 20px; }
-.card { background: #fff; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; }
-.card:hover { transform: translateY(-3px); }
-.card .avatar { font-size: 2.5rem; margin-bottom: 10px; }
-.card .name { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
-.card .points { font-size: 2rem; color: #6C5CE7; font-weight: bold; margin-bottom: 10px; }
-.card .points.up { animation: pulse 0.3s; }
-@keyframes pulse { 50% { transform: scale(1.2); } }
-.card .btns { display: flex; justify-content: center; gap: 10px; }
-.card .btns button { width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer; font-size: 1.2rem; }
-.btn-plus { background: #E5F9E5; color: #27AE60; }
-.btn-minus { background: #FFE5E5; color: #E74C3C; }
-.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; }
-.modal.show { display: flex; }
-.modal-content { background: #fff; padding: 30px; border-radius: 16px; width: 90%; max-width: 350px; }
-.modal-content h3 { color: #6C5CE7; margin-bottom: 15px; }
-.modal-content input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 15px; font-size: 1rem; }
-.modal-content input:focus { outline: none; border-color: #6C5CE7; }
-.modal-content .btns { display: flex; gap: 10px; }
-.modal-content .btns button { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; }
-.modal-content .btns .save { background: #6C5CE7; color: white; }
-.modal-content .btns .cancel { background: #ddd; }
-.empty { text-align: center; color: #999; padding: 50px; }
-.empty .icon { font-size: 3rem; margin-bottom: 10px; }
+body{font-family:sans-serif;background:#f5f5f5;padding:20px}
+h1{color:#6C5CE7}
+.btn{background:#00CEC9;color:#fff;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-size:16px;margin:5px}
+.card{background:#fff;padding:20px;margin:10px 0;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.pts{font-size:24px;color:#6C5CE7;font-weight:bold}
 </style>
 </head>
 <body>
-<div class="container">
-<div class="sidebar">
-<h2>🏫 班级</h2>
-<div id="classList"></div>
-<button class="add-btn" onclick="showAddClass()">+ 新建班级</button>
-</div>
-<div class="main">
-<div class="header">
-<div>
-<h1 id="className">请选择班级</h1>
-<span class="student-count" id="studentCount"></span>
-</div>
-<button class="add-btn" onclick="showAddStudent()">+ 添加学生</button>
-</div>
-<div class="grid" id="studentGrid"></div>
-</div>
-</div>
-<div class="modal" id="classModal">
-<div class="modal-content">
-<h3>新建班级</h3>
-<input type="text" id="classInput" placeholder="班级名称">
-<div class="btns">
-<button class="cancel" onclick="closeModal('classModal')">取消</button>
-<button class="save" onclick="saveClass()">保存</button>
-</div>
-</div>
-</div>
-<div class="modal" id="studentModal">
-<div class="modal-content">
+<h1>🏫 班级积分</h1>
+<input id="newClass" placeholder="班级名"><button class="btn" onclick="addClass()">+新建班级</button>
+<div id="classes"></div>
+<hr>
+<h1 id="cname">请选择班级</h1>
+<button class="btn" onclick="showAdd()">+添加学生</button>
+<div id="students"></div>
+
+<div id="modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5)">
+<div style="background:#fff;padding:30px;border-radius:12px;max-width:300px;margin:100px auto">
 <h3>添加学生</h3>
-<input type="text" id="studentInput" placeholder="学生姓名">
-<div class="btns">
-<button class="cancel" onclick="closeModal('studentModal')">取消</button>
-<button class="save" onclick="saveStudent()">保存</button>
+<input id="sname" placeholder="姓名">
+<button class="btn" onclick="addStudent()">保存</button>
+<button class="btn" onclick="closeModal()" style="background:#ccc">取消</button>
 </div>
 </div>
-</div>
+
 <script>
-const AVATARS = ['🧑‍🎓','🧑‍💻','👦','👧','🧒','👨‍🎤','👩‍🎓','🧑‍🎨'];
-let data = {classes:{}};
-let currentClass = null;
-let editKey = null;
-
-function load() {
-  const s = localStorage.getItem('cp_data');
-  if (s) try{data = JSON.parse(s)}catch{e}
-  showClasses();
+var data={classes:{}},cur=null,editId=null;
+function init(){var s=localStorage.getItem('cp');if(s)data=JSON.parse(s);render();}
+function save(){localStorage.setItem('cp',JSON.stringify(data));render();}
+function render(){
+ var c=document.getElementById('classes'),k=Object.keys(data.classes);
+ c.innerHTML=k.length?k.map(x=>'<div class="card" onclick="sel(\''+x+'\')">'+data.classes[x].name+'</div>').join(''):'暂无班级';
+ if(k.length&&!cur)sel(k[0]);
 }
-function save() { localStorage.setItem('cp_data', JSON.stringify(data)); }
-
-function showClasses() {
-  const c = document.getElementById('classList');
-  const k = Object.keys(data.classes);
-  if (!k.length) { c.innerHTML = '<div class="empty">暂无班级</div>'; return; }
-  c.innerHTML = k.map(x => `<div class="class-item ${currentClass===x?'active':''}" onclick="sel('${x}')">${data.classes[x].name}</div>`).join('');
-  if (!currentClass) sel(k[0]);
+function sel(id){cur=id;document.getElementById('cname').innerText=data.classes[id].name;renderStu();}
+function renderStu(){
+ var s=document.getElementById('students'),st=data.classes[cur]?.students||{},k=Object.keys(st);
+ s.innerHTML=k.length?k.map(x=>'<div class="card" onclick="inc(\''+x+'\');event.stopPropagation()"><b>'+st[x].name+'</b><div class="pts" id="p'+x+'">'+st[x].points+'</div></div>').join(''):'暂无学生';
 }
-function sel(id) { currentClass = id; document.getElementById('className').textContent = data.classes[id].name; showClasses(); showStudents(); }
-function showStudents() {
-  const s = document.getElementById('studentGrid');
-  const st = data.classes[currentClass]?.students || {};
-  const k = Object.keys(st);
-  if (!k.length) { s.innerHTML = '<div class="empty"><div class="icon">📚</div><p>点击添加学生</p></div>'; document.getElementById('studentCount').textContent = '0人'; return; }
-  s.innerHTML = k.map(x => `<div class="card" onclick="inc('${x}')"><div class="avatar">${st[x].avatar}</div><div class="name">${st[x].name}</div><div class="points" id="p${x}">${st[x].points||0}</div><div class="btns"><button class="btn-minus" onclick="e=>dec('${x}',e)">➖</button><button class="btn-plus" onclick="e=>inc('${x}',e)">➕</button></div></div>`).join('');
-  document.getElementById('studentCount').textContent = k.length + '人';
+function addClass(){
+ var n=document.getElementById('newClass').value.trim();
+ if(!n)return;
+ var id='c'+Date.now();
+ data.classes[id]={name:n,students:{}};
+ save();
 }
-
-function inc(k,e) { e.stopPropagation(); data.classes[currentClass].students[k].points = (data.classes[currentClass].students[k].points||0)+1; save(); document.getElementById('p'+k).textContent = data.classes[currentClass].students[k].points; document.getElementById('p'+k).classList.add('up'); setTimeout(()=>document.getElementById('p'+k).classList.remove('up'),300); }
-function dec(k,e) { e.stopPropagation(); if(data.classes[currentClass].students[k].points>0){data.classes[currentClass].students[k].points--;save();document.getElementById('p'+k).textContent=data.classes[currentClass].students[k].points;} }
-
-function showAddClass() { document.getElementById('classInput').value=''; document.getElementById('classModal').classList.add('show'); }
-function showAddStudent() { if(!currentClass)return alert('先创建班级'); document.getElementById('studentInput').value=''; document.getElementById('studentModal').classList.add('show'); }
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-
-function saveClass() {
-  const n = document.getElementById('classInput').value.trim();
-  if (!n) return;
-  const id = 'c'+Date.now();
-  data.classes[id] = {name:n,students:{}};
-  save();
-  closeModal('classModal');
-  showClasses();
-  sel(id);
+function sel(id){cur=id;document.getElementById('cname').innerText=data.classes[id].name;renderStu();}
+function showAdd(){document.getElementById('modal').style.display='block';}
+function closeModal(){document.getElementById('modal').style.display='none';}
+function addStudent(){
+ var n=document.getElementById('sname').value.trim();
+ if(!n)return;
+ if(!data.classes[cur].students)data.classes[cur].students={};
+ var id='s'+Date.now();
+ data.classes[cur].students[id]={name:n,points:0};
+ document.getElementById('sname').value='';
+ closeModal();save();
 }
-function saveStudent() {
-  const n = document.getElementById('studentInput').value.trim();
-  if (!n) return;
-  if (!data.classes[currentClass].students) data.classes[currentClass].students = {};
-  const id = 's'+Date.now();
-  data.classes[currentClass].students[id] = {name:n,avatar:AVATARS[Math.floor(Math.random()*AVATARS.length)],points:0};
-  save();
-  closeModal('studentModal');
-  showStudents();
-}
-load();
+function inc(id){data.classes[cur].students[id].points++;document.getElementById('p'+id).innerText=data.classes[cur].students[id].points;save();}
+init();
 </script>
 </body>
 </html>
